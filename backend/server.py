@@ -3,8 +3,9 @@
 当前返回演示数据；真实数据接入时替换 provider 层，不改变前端接口。
 启动：python3 backend/server.py
 """
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import os
 from urllib.parse import urlparse, parse_qs
 from providers import get_provider
 from auth import register, login, user_from_token, save_filter, list_filters
@@ -38,7 +39,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/api/health":
-            return self._send({"status": "ok", "provider": "demo", "message": "演示数据源正常"})
+            import database as _db
+            return self._send({"status": "ok", "provider": "demo", "database": _db.backend_name(), "message": "演示数据源正常"})
         if parsed.path == "/api/market":
             market = parse_qs(parsed.query).get("market", ["A股"])[0]
             if market not in DEMO:
@@ -119,5 +121,8 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
 if __name__ == "__main__":
-    print("量策筛选 API 已启动：http://127.0.0.1:8787")
-    HTTPServer(("127.0.0.1", 8787), Handler).serve_forever()
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "8787"))
+    import database as _db
+    print(f"量策筛选 API 已启动：http://{host}:{port}（数据库：{_db.backend_name()}）")
+    ThreadingHTTPServer((host, port), Handler).serve_forever()

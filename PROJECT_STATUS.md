@@ -2,49 +2,48 @@
 
 ## 当前阶段
 
-第一版可交互 Web 原型已可运行。
+可交互 Web 原型 + 本地后端已可运行，数据库层已支持云端 PostgreSQL 部署。
 
 ## 已完成
 
-- 已确认产品方向：A 股、期货、期权数据筛选
-- 已确认目标平台：电脑桌面端和手机移动端
-- 已确认需要用户注册、会员收费和权限功能
-- 已建立 [设计规范](./DESIGN_GUIDELINES.md)
-- 已建立可直接打开的交互式原型：`index.html`、`styles.css`、`app.js`
-- 已加入工作台、A 股、期货、期权筛选入口和模拟筛选结果
-- 已建立后端数据接入层原型：`backend/server.py`
-- 已定义统一市场接口：`/api/health`、`/api/market`
-- 已确定：AKShare 仅用于开发测试，正式上线替换为专业数据 API
-- 已完成前端筛选页到后端 `/api/market` 的联调逻辑，并保留后端不可用时的演示数据回退
-- 已完成本地 SQLite 用户注册、登录、会话、筛选模板保存接口
-- 已加入免费版会员字段 `plan`，为后续订阅权限预留
-- **已重建 `index.html` 入口页面**（2026-09-19），前端与后端联调验证通过
-  - `/api/health` → 返回正常
-  - `/api/market?market=A股/期货/期权` → 返回演示数据
-  - `/api/register` → 注册成功
-  - `/api/login` → 登录返回 token
+- 产品方向：A 股、期货、期权数据筛选；桌面端 + 移动端
+- 用户注册、会员字段（plan）、权限预留
+- [设计规范](./DESIGN_GUIDELINES.md)
+- 前端：`index.html`、`styles.css`、`app.js`
+  - 工作台、A 股 / 期货 / 期权筛选入口与结果
+  - 登录注册正式弹窗 UI（替代 prompt）
+  - 筛选结果详情页（Canvas K 线图 + 8 项指标）
+  - 高级筛选（运算符选择、数值输入、排序栏）
+  - 自选列表面板、筛选模板保存/加载/删除
+- 后端：`backend/server.py`（ThreadingHTTPServer）
+  - `/api/health`、`/api/market`、`/api/screen`
+  - `/api/register`、`/api/login`、`/api/me`
+  - `/api/filters`（含 delete）、`/api/watchlist`（含 remove）
+  - 筛选引擎 `apply_filters()`：多条件 AND + 5 种运算符 + 排序
+- 数据层：Demo + AKShare 双 provider（`DATA_PROVIDER` 切换）
+- **数据库抽象层 `backend/database.py`（2026-09-19）**
+  - 本地默认 SQLite，设置 `DATABASE_URL` 自动切换 PostgreSQL
+  - 统一 `query / query_one / execute`，SQL 用 `?` 占位符自动转换
+  - 表结构首次启动自动创建，无需手动迁移
+  - 详见 `backend/DATABASE.md`
+- 已部署 GitHub 代码托管与 Coze Pages 在线预览
 
 ## 尚未完成
 
-- 登录注册从 prompt 弹窗升级为正式 UI 弹窗
-- 筛选结果详情页（K 线图、基础数据）
-- 保存筛选模板和自选列表前端功能
-- 数据导出功能
-- 会员权限判断逻辑
-- 数据源选择和账号申请
-- 数据库设计（本地 SQLite → 生产 PostgreSQL 迁移方案）
-- 筛选规则设计
-- 会员支付实现
-- 部署到 GitHub 仓库
+- 数据导出（Excel / PDF）
+- 会员权限与调用频次限制
+- 真实生产数据源接入（专业数据 API）
+- 移动端专项适配
+- 会员支付
+- 模板一键加载后自动回填条件并运行（当前仅提示）
 
 ## 下一步任务
 
-1. 登录注册 UI 升级：把 `prompt()` 改为页面内弹窗
-2. 完善筛选结果展示（K 线、详情）
-3. 实现保存筛选模板和自选列表
+1. 移动端布局适配
+2. 数据导出功能
+3. 会员权限判断逻辑
 
 ## 用户需要确认的事项
 
 - 产品名称确认："量策筛选"是否最终定名
-- 视觉风格是否满意
-- 后续是否部署到 GitHub.com 做代码托管
+- 云端 PostgreSQL 实例及 `DATABASE_URL`（准备正式部署时提供）

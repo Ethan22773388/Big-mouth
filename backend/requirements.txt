@@ -1,1 +1,3 @@
 akshare>=1.18.50,<2
+# 云端 PostgreSQL 数据库（设置 DATABASE_URL 后启用）
+psycopg2-binary>=2.9.9
