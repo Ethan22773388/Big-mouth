@@ -9,7 +9,7 @@
 <body>
 <div class="app">
   <!-- 侧边栏 -->
-  <aside>
+  <aside id="sidebar">
     <h2>量策</h2>
     <small>多市场量化筛选</small>
     <nav>
@@ -49,9 +49,14 @@
   <div class="shell">
     <!-- 顶栏 -->
     <header>
-      <span>📍 <b id="crumb">市场概览</b></span>
+      <span style="display:flex;align-items:center;gap:10px">
+        <button id="menu-toggle" aria-label="打开菜单">☰</button>
+        <b style="color:#172033" class="mobile-logo">量策</b>
+        <span>📍 <b id="crumb">市场概览</b></span>
+      </span>
       <button data-action="login" id="header-login-btn">登录 / 注册</button>
     </header>
+    <div id="drawer-mask"></div>
 
     <!-- 主页视图 -->
     <main>

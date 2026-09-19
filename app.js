@@ -371,20 +371,20 @@ function openDetail(item) {
       {label:'PB',value:item.pb||(0.8+Math.random()*5).toFixed(1)},
       {label:'ROE',value:item.roe||'--'},
       {label:'成交量',value:item.vol||'--'},
-      {label:'换手率',(1.2+Math.random()*3).toFixed(1)+'%'},
-      {label:'52周高',(item.price*(1+Math.random()*0.3)).toFixed(1)},
-      {label:'52周低',(item.price*(1-Math.random()*0.3)).toFixed(1)}
+      {label:'换手率',value:(1.2+Math.random()*3).toFixed(1)+'%'},
+      {label:'52周高',value:(item.price*(1+Math.random()*0.3)).toFixed(1)},
+      {label:'52周低',value:(item.price*(1-Math.random()*0.3)).toFixed(1)}
     ].map(m => `<div class="metric-card"><div class="label">${m.label}</div><div class="value">${m.value}</div></div>`).join('');
   } else {
     metricsEl.innerHTML = [
       {label:'成交量',value:item.vol||'--'},
       {label:'持仓量',value:item.oi||'--'},
       {label:'隐含波动率',value:item.iv||'--'},
-      {label:'保证金',(item.price*0.1).toFixed(1)},
-      {label:'昨收',(item.price*(1-Math.random()*0.02)).toFixed(2)},
-      {label:'今开',(item.price*(1+(Math.random()-0.5)*0.02)).toFixed(2)},
-      {label:'最高',(item.price*(1+Math.random()*0.02)).toFixed(2)},
-      {label:'最低',(item.price*(1-Math.random()*0.02)).toFixed(2)}
+      {label:'保证金',value:(item.price*0.1).toFixed(1)},
+      {label:'昨收',value:(item.price*(1-Math.random()*0.02)).toFixed(2)},
+      {label:'今开',value:(item.price*(1+(Math.random()-0.5)*0.02)).toFixed(2)},
+      {label:'最高',value:(item.price*(1+Math.random()*0.02)).toFixed(2)},
+      {label:'最低',value:(item.price*(1-Math.random()*0.02)).toFixed(2)}
     ].map(m => `<div class="metric-card"><div class="label">${m.label}</div><div class="value">${m.value}</div></div>`).join('');
   }
   // 绘制K线图
@@ -550,6 +550,26 @@ document.querySelector('#register-form').addEventListener('submit', e => {
   if (password !== confirm) { document.querySelector('#register-error').textContent = '两次密码不一致'; return; }
   doRegister(phone, password);
 });
+
+// ═══ 移动端抽屉导航 ═══
+(function () {
+  const app = document.querySelector('.app');
+  const toggle = document.querySelector('#menu-toggle');
+  const mask = document.querySelector('#drawer-mask');
+  if (!toggle || !mask) return;
+  const open = () => app.classList.add('drawer-open');
+  const close = () => app.classList.remove('drawer-open');
+  toggle.addEventListener('click', () => app.classList.contains('drawer-open') ? close() : open());
+  mask.addEventListener('click', close);
+  // 点击侧栏中的导航项后自动收起（含自选/模板面板）
+  document.querySelector('#sidebar').addEventListener('click', e => {
+    if (e.target.closest('[data-view]')) close();
+  });
+  // 旋转/拉宽到桌面尺寸时移除状态
+  window.addEventListener('resize', () => { if (window.innerWidth > 860) close(); });
+  // Esc 关闭
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+})();
 
 // 初始化：检查登录状态
 checkAuth();
