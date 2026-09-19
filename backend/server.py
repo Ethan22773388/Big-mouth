@@ -51,6 +51,12 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/filters":
             user = self._current_user()
             return self._send({"items": list_filters(user["id"])} if user else {"error": "unauthorized"}, 200 if user else 401)
+        if parsed.path == "/api/watchlist":
+            user = self._current_user()
+            if not user: return self._send({"error": "unauthorized"}, 401)
+            from auth import list_watchlist
+            market = parse_qs(parsed.query).get("market", [None])[0]
+            return self._send({"items": list_watchlist(user["id"], market)})
         return self._send({"error": "not_found"}, 404)
 
     def _json_body(self):
@@ -88,6 +94,21 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/api/filters":
                 item_id = save_filter(user["id"], body.get("name", "未命名模板"), body.get("market", "A股"), json.dumps(body.get("definition", {}), ensure_ascii=False))
                 return self._send({"id": item_id}, 201)
+            if parsed.path == "/api/filters/delete":
+                from auth import delete_filter
+                ok = delete_filter(user["id"], body.get("id", 0))
+                return self._send({"deleted": ok})
+            if parsed.path == "/api/watchlist":
+                from auth import add_to_watchlist
+                try:
+                    item = add_to_watchlist(user["id"], body.get("code",""), body.get("name",""), body.get("market","A股"), body.get("note",""))
+                    return self._send(item, 201)
+                except ValueError as e:
+                    return self._send({"error": str(e)}, 409)
+            if parsed.path == "/api/watchlist/remove":
+                from auth import remove_from_watchlist
+                ok = remove_from_watchlist(user["id"], body.get("code", ""))
+                return self._send({"removed": ok})
             return self._send({"error": "not_found"}, 404)
         except ValueError as exc:
             return self._send({"error": "invalid_request", "message": str(exc)}, 400)

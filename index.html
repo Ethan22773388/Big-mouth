@@ -28,6 +28,22 @@
       <span id="profile-info">未登录</span>
       <a id="profile-logout" class="hidden" style="color:#3164e8;cursor:pointer;font-size:11px;margin-left:6px">退出</a>
     </div>
+    <!-- 自选列表 -->
+    <div class="watchlist-panel" id="watchlist-panel">
+      <div style="font-size:11px;color:#8792a5;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>⭐ 自选列表</span>
+        <button id="refresh-watchlist" style="background:none;border:none;color:#3164e8;cursor:pointer;font-size:11px">刷新</button>
+      </div>
+      <div id="watchlist-items" style="font-size:12px;color:#8792a5">登录后查看</div>
+    </div>
+    <!-- 筛选模板 -->
+    <div class="watchlist-panel" id="template-panel">
+      <div style="font-size:11px;color:#8792a5;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>📋 我的模板</span>
+        <button id="refresh-templates" style="background:none;border:none;color:#3164e8;cursor:pointer;font-size:11px">刷新</button>
+      </div>
+      <div id="template-items" style="font-size:12px;color:#8792a5">登录后查看</div>
+    </div>
   </aside>
 
   <div class="shell">
@@ -97,6 +113,7 @@
           </div>
           <div>
             <button class="primary" data-action="run">运行筛选</button>
+            <button class="outline" data-action="save-template" style="margin-left:8px">💾 保存模板</button>
             <button class="outline" data-action="reset" style="margin-left:8px">重置</button>
           </div>
         </div>
@@ -193,5 +210,19 @@
 </div>
 
 <script src="app.js"></script>
+
+<!-- 保存模板弹窗 -->
+<div id="save-template-modal" class="modal-overlay hidden">
+  <div class="modal" style="width:360px">
+    <button class="modal-close" id="save-template-close-btn"></button>
+    <h3 style="margin:0 0 16px;font-size:16px;color:#0f172a"> 保存筛选模板</h3>
+    <form id="save-template-form">
+      <label style="display:block;font-size:11px;color:#7d8798;margin-bottom:6px">模板名称</label>
+      <input type="text" id="template-name" placeholder="例如：低PE高ROE策略" style="width:100%;padding:11px 13px;border:1px solid #e1e6ef;border-radius:8px;font:inherit;font-size:13px;outline:none;margin-bottom:12px"/>
+      <p id="template-error" class="form-error"></p>
+      <button type="submit" class="primary" style="width:100%;padding:12px;font-size:14px">保存模板</button>
+    </form>
+  </div>
+</div>
 </body>
 </html>

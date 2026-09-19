@@ -44,7 +44,7 @@ function checkAuth() {
   if (!token) { updateProfile(null); return; }
   fetch(API + '/api/me', { headers: { 'Authorization': 'Bearer ' + token } })
     .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => { currentUser = d.user; updateProfile(d.user); })
+    .then(d => { currentUser = d.user; updateProfile(d.user); loadWatchlist(); loadTemplates(); })
     .catch(() => { localStorage.removeItem('quant_token'); updateProfile(null); });
 }
 
@@ -67,7 +67,80 @@ function doLogout() {
   localStorage.removeItem('quant_token');
   currentUser = null;
   updateProfile(null);
+  document.querySelector('#watchlist-items').innerHTML = '登录后查看';
+  document.querySelector('#template-items').innerHTML = '登录后查看';
   toast('已退出登录');
+}
+
+// ═══ 加载自选列表 ═══
+async function loadWatchlist() {
+  const token = localStorage.getItem('quant_token');
+  if (!token) return;
+  try {
+    const res = await fetch(API + '/api/watchlist', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.querySelector('#watchlist-items');
+    if (!data.items?.length) { el.innerHTML = '<div style="font-size:11px;color:#a0a8b7;padding:4px 0">暂无自选</div>'; return; }
+    el.innerHTML = data.items.map(w =>
+      `<div class="watchlist-item" data-code="${w.code}"><div><span class="wl-code">${w.code}</span><br><span class="wl-name">${w.name}</span></div><button class="wl-remove" data-code="${w.code}">✕</button></div>`
+    ).join('');
+    el.querySelectorAll('.watchlist-item').forEach(item => {
+      item.addEventListener('click', e => {
+        if (e.target.classList.contains('wl-remove')) return;
+        toast('查看 ' + item.dataset.code);
+      });
+    });
+    el.querySelectorAll('.wl-remove').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        await fetch(API + '/api/watchlist/remove', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ code: btn.dataset.code })
+        });
+        toast('已移除');
+        loadWatchlist();
+      });
+    });
+  } catch (e) { }
+}
+
+// ═══ 加载模板列表 ═══
+async function loadTemplates() {
+  const token = localStorage.getItem('quant_token');
+  if (!token) return;
+  try {
+    const res = await fetch(API + '/api/filters', { headers: { 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) return;
+    const data = await res.json();
+    const el = document.querySelector('#template-items');
+    if (!data.items?.length) { el.innerHTML = '<div style="font-size:11px;color:#a0a8b7;padding:4px 0">暂无模板</div>'; return; }
+    el.innerHTML = data.items.map(t => {
+      const def = typeof t.definition === 'string' ? JSON.parse(t.definition) : t.definition;
+      return `<div class="template-item" data-id="${t.id}"><div><span class="tpl-name">${t.name}</span></div><span class="tpl-market">${t.market}</span><button class="tpl-delete" data-id="${t.id}">✕</button></div>`;
+    }).join('');
+    el.querySelectorAll('.template-item').forEach(item => {
+      item.addEventListener('click', e => {
+        if (e.target.classList.contains('tpl-delete')) return;
+        const t = data.items.find(x => x.id == item.dataset.id);
+        if (t) {
+          const def = typeof t.definition === 'string' ? JSON.parse(t.definition) : t.definition;
+          toast('已加载模板：' + t.name);
+        }
+      });
+    });
+    el.querySelectorAll('.tpl-delete').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        await fetch(API + '/api/filters/delete', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ id: parseInt(btn.dataset.id) })
+        });
+        toast('已删除');
+        loadTemplates();
+      });
+    });
+  } catch (e) { }
 }
 
 // ══ 弹窗控制 ═══
@@ -123,6 +196,8 @@ async function doLogin(phone, password) {
       currentUser = x.user;
       updateProfile(x.user);
       showLoggedIn(x.user);
+      loadWatchlist();
+      loadTemplates();
     } else {
       errEl.textContent = x.message || '账号或密码错误';
     }
@@ -427,9 +502,32 @@ document.addEventListener('click', e => {
   // 详情页事件
   if (e.target.id === 'detail-close-btn') closeDetail();
   if (e.target.id === 'detail-modal') closeDetail();
-  if (e.target.id === 'detail-watch-btn') { toast('⭐ 已加入自选'); closeDetail(); }
+  if (e.target.id === 'detail-watch-btn') {
+    if (!currentUser) { toast('请先登录'); return; }
+    const token = localStorage.getItem('quant_token');
+    fetch(API + '/api/watchlist', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ code: detailData.code, name: detailData.name, market })
+    }).then(r => r.json()).then(d => {
+      if (d.id) { toast('⭐ 已加入自选'); loadWatchlist(); }
+      else toast(d.error || '加入失败');
+    }).catch(() => toast('加入失败'));
+    closeDetail();
+  }
   if (e.target.id === 'detail-export-btn') toast(' 数据导出功能即将开放');
   if (e.target.id === 'detail-screen-btn') { closeDetail(); screen(market); }
+  // 保存模板
+  if (e.target.dataset.action === 'save-template') {
+    if (!currentUser) { openModal('login'); toast('请先登录'); return; }
+    document.querySelector('#save-template-modal').classList.remove('hidden');
+    document.querySelector('#template-name').value = '';
+    document.querySelector('#template-error').textContent = '';
+  }
+  if (e.target.id === 'save-template-close-btn') document.querySelector('#save-template-modal').classList.add('hidden');
+  if (e.target.id === 'save-template-modal' && e.target === e.currentTarget) document.querySelector('#save-template-modal').classList.add('hidden');
+  // 面板刷新
+  if (e.target.id === 'refresh-watchlist') loadWatchlist();
+  if (e.target.id === 'refresh-templates') loadTemplates();
 });
 
 // 表单提交
@@ -455,3 +553,30 @@ document.querySelector('#register-form').addEventListener('submit', e => {
 
 // 初始化：检查登录状态
 checkAuth();
+
+// 保存模板表单
+document.querySelector('#save-template-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const token = localStorage.getItem('quant_token');
+  if (!token) return;
+  const name = document.querySelector('#template-name').value.trim();
+  if (!name) { document.querySelector('#template-error').textContent = '请输入模板名称'; return; }
+  // 收集当前筛选条件
+  const d = data[market];
+  const filters = [];
+  document.querySelectorAll('#fields .field').forEach((fieldEl, i) => {
+    const f = d.fields[i];
+    if (!f) return;
+    const op = fieldEl.querySelector('.op-select')?.value || f.op;
+    const val = fieldEl.querySelector('.field-input')?.value;
+    if (val !== '' && val !== undefined) filters.push({ field: f.label, key: f.key, op, value: val });
+  });
+  const activeSort = document.querySelector('.sort-btn.active');
+  fetch(API + '/api/filters', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ name, market, definition: { filters, sort_by: activeSort?.dataset.sort } })
+  }).then(r => r.json()).then(d => {
+    if (d.id) { toast('💾 模板已保存'); loadTemplates(); document.querySelector('#save-template-modal').classList.add('hidden'); }
+    else toast('保存失败');
+  }).catch(() => toast('保存失败'));
+});
