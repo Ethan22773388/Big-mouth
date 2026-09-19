@@ -1,31 +1,34 @@
 // ═══ 数据 ═══
 const data = {
   A股: {
-    fields: [['市值','大于','50'],['PE（TTM）','小于','30'],['ROE','大于','10'],['20日均线','高于','60日均线']],
-    h: ['代码','名称','最新价','涨跌幅','市值','ROE'],
-    r: [
-      {code:'600519',name:'贵州茅台',price:1482,change:1.52,cap:'18,624 亿',roe:'23.4%',pe:25.6,pb:8.2,vol:'126.4万'},
-      {code:'300750',name:'宁德时代',price:221.8,change:2.18,cap:'9,741 亿',roe:'18.2%',pe:32.1,pb:4.8,vol:'218.5万'},
-      {code:'601318',name:'中国平安',price:51.66,change:0.67,cap:'9,412 亿',roe:'11.8%',pe:6.8,pb:0.9,vol:'98.1万'}
-    ]
+    fields: [
+      {label:'市值(亿)',key:'market_cap',op:'大于',value:'50'},
+      {label:'PE(TTM)',key:'pe',op:'小于',value:'30'},
+      {label:'ROE(%)',key:'roe',op:'大于',value:'10'},
+      {label:'涨跌幅(%)',key:'change',op:'大于',value:'0'},
+      {label:'换手率(%)',key:'turnover',op:'大于',value:'1'},
+      {label:'PB',key:'pb',op:'小于',value:'5'}
+    ],
+    h: ['代码','名称','最新价','涨跌幅','市值(亿)','PE','ROE(%)'],
+    sortOptions: ['涨跌幅','市值','PE','ROE','换手率']
   },
   期货: {
-    fields: [['成交量排名','前','20'],['持仓量变化','大于','5'],['20日波动率','大于','15'],['合约状态','等于','主力合约']],
+    fields: [
+      {label:'成交量',key:'volume',op:'大于',value:'50000'},
+      {label:'持仓量',key:'open_interest',op:'大于',value:'100000'},
+      {label:'涨跌幅(%)',key:'change',op:'大于',value:'0'}
+    ],
     h: ['合约','品种','最新价','涨跌幅','成交量','持仓量'],
-    r: [
-      {code:'IF2610',name:'沪深300',price:4126,change:0.84,vol:'126,420',oi:'218,540'},
-      {code:'TA610',name:'PTA',price:5214,change:-1.16,vol:'98,125',oi:'342,810'},
-      {code:'RB2610',name:'螺纹钢',price:3286,change:0.43,vol:'87,410',oi:'1,124,620'}
-    ]
+    sortOptions: ['成交量','持仓量','涨跌幅']
   },
   期权: {
-    fields: [['期权类型','等于','认购'],['剩余到期日','大于','15'],['隐含波动率','小于','30'],['买卖价差率','小于','2']],
+    fields: [
+      {label:'期权类型',key:'type',op:'等于',value:'认购'},
+      {label:'隐含波动率(%)',key:'iv',op:'小于',value:'30'},
+      {label:'涨跌幅(%)',key:'change',op:'大于',value:'0'}
+    ],
     h: ['合约','类型','最新价','涨跌幅','隐含波动率','持仓量'],
-    r: [
-      {code:'510050C2609M03000',name:'50ETF认购',price:0.1824,change:8.62,iv:'22.4%',oi:'126,420'},
-      {code:'510300P2609M04400',name:'300ETF认沽',price:0.0988,change:-3.18,iv:'24.1%',oi:'98,125'},
-      {code:'IO2610-C-4200',name:'中证500认购',price:112.6,change:2.11,iv:'21.7%',oi:'65,802'}
-    ]
+    sortOptions: ['涨跌幅','隐含波动率','持仓量']
   }
 };
 
@@ -161,31 +164,110 @@ function screen(m) {
   document.querySelector('#screen').classList.remove('hidden');
   document.querySelector('#screen-title').textContent = m + '筛选';
   document.querySelector('#crumb').textContent = m + '筛选';
-  document.querySelector('#fields').innerHTML = data[m].fields.map(f =>
-    `<div class="field"><label>${f[0]}</label><select><option>${f[1]}</option><option>小于</option><option>等于</option></select><input value="${f[2]}"></div>`
+  const d = data[m];
+  // 筛选条件
+  document.querySelector('#fields').innerHTML = d.fields.map((f, i) =>
+    `<div class="field"><label>${f.label}</label><div class="field-row"><select data-idx="${i}" class="op-select"><option${f.op==='大于'?' selected':''}>大于</option><option${f.op==='小于'?' selected':''}>小于</option><option${f.op==='等于'?' selected':''}>等于</option><option${f.op==='大于等于'?' selected':''}>大于等于</option><option${f.op==='小于等于'?' selected':''}>小于等于</option></select><input type="number" step="any" data-idx="${i}" class="field-input" value="${f.value}"></div></div>`
   ).join('');
-  document.querySelector('#output').innerHTML = '<div class="placeholder">⌕<h3>准备好开始了吗？</h3><p>在左侧设置条件，然后点击"运行筛选"。</p></div>';
+  // 排序选项
+  const sortHtml = d.sortOptions ? `<div class="sort-bar"><span style="font-size:11px;color:#8792a5;margin-right:8px">排序</span>${d.sortOptions.map((s, i) => `<button class="sort-btn${i===0?' active':''}" data-sort="${s}">${s}</button>`).join('')}</div>` : '';
+  document.querySelector('#output').innerHTML = sortHtml + '<div class="placeholder">⌕<h3>准备好开始了吗？</h3><p>在左侧设置条件，然后点击"运行筛选"。</p></div>';
   document.querySelector('#count').textContent = '等待运行';
 }
 
 async function run() {
-  let d = data[market]; let rows = d.r;
+  let d = data[market]; let rows = [];
+  // 收集筛选条件
+  const filters = [];
+  document.querySelectorAll('#fields .field').forEach((fieldEl, i) => {
+    const f = d.fields[i];
+    if (!f) return;
+    const op = fieldEl.querySelector('.op-select')?.value || f.op;
+    const val = fieldEl.querySelector('.field-input')?.value;
+    if (val !== '' && val !== undefined) {
+      filters.push({ field: f.label, key: f.key, op, value: val });
+    }
+  });
+  // 收集排序
+  const activeSort = document.querySelector('.sort-btn.active');
+  const sort_by = activeSort ? activeSort.dataset.sort : null;
+  // 调用后端筛选 API
   try {
-    const res = await fetch(API + '/api/market?market=' + encodeURIComponent(market));
+    const res = await fetch(API + '/api/screen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ market, filters, sort_by, sort_order: 'desc', limit: 100 })
+    });
     if (res.ok) {
       const payload = await res.json();
-      if (payload.items?.length) {
-        rows = payload.items.map(x => ({code:x.code,name:x.name,price:Number(x.price),change:Number(x.change),cap:x.market_cap?x.market_cap+' 亿':'',roe:x.roe?x.roe+'%':'',pe:x.pe,pb:x.pb,vol:x.volume,oi:x.open_interest}));
-      }
+      rows = payload.items || [];
+      document.querySelector('#count').textContent = `${payload.matched} / ${payload.total} 个标的`;
     }
   } catch (e) { }
-  document.querySelector('#count').textContent = rows.length + ' 个标的';
-  document.querySelector('#output').innerHTML = `<table class="result-table"><thead><tr>${d.h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map((r, idx) => `<tr data-idx="${idx}" class="stock-row"><td>${r.code}</td><td>${r.name}</td><td>${typeof r.price === 'number' ? r.price.toLocaleString() : r.price}</td><td class="${r.change >= 0 ? 'pos' : 'neg'}">${r.change >= 0 ? '+' : ''}${r.change}%</td><td>${r.cap || r.vol || ''}</td><td>${r.roe || r.oi || ''}</td></tr>`).join('')}</tbody></table>`;
-  // 绑定行点击
+  // 后端失败时使用前端过滤
+  if (!rows.length) {
+    rows = d.r || [];
+    const d2 = {
+      A股: {
+        r: [
+          {code:'600519',name:'贵州茅台',price:1482,change:1.52,market_cap:18624,pe:25.6,pb:8.2,roe:23.4,volume:1264000,turnover:0.42},
+          {code:'300750',name:'宁德时代',price:221.8,change:2.18,market_cap:9741,pe:32.1,pb:4.8,roe:18.2,volume:2185000,turnover:1.23},
+          {code:'601318',name:'中国平安',price:51.66,change:0.67,market_cap:9412,pe:6.8,pb:0.9,roe:11.8,volume:981000,turnover:0.53},
+          {code:'000858',name:'五粮液',price:138.5,change:-0.36,market_cap:5374,pe:22.3,pb:5.1,roe:21.6,volume:542000,turnover:0.38},
+          {code:'002594',name:'比亚迪',price:268.9,change:3.25,market_cap:7821,pe:28.7,pb:6.3,roe:19.5,volume:1856000,turnover:1.05},
+          {code:'600036',name:'招商银行',price:35.82,change:0.28,market_cap:9032,pe:5.2,pb:0.8,roe:15.4,volume:723000,turnover:0.29},
+          {code:'601012',name:'隆基绿能',price:22.15,change:-1.82,market_cap:1678,pe:18.9,pb:2.1,roe:12.3,volume:1245000,turnover:1.65},
+          {code:'300059',name:'东方财富',price:18.62,change:4.15,market_cap:2935,pe:35.2,pb:3.8,roe:9.7,volume:3214000,turnover:2.18},
+          {code:'600900',name:'长江电力',price:28.35,change:0.18,market_cap:6912,pe:21.4,pb:3.5,roe:16.8,volume:456000,turnover:0.19},
+          {code:'000333',name:'美的集团',price:62.4,change:1.05,market_cap:4372,pe:12.8,pb:3.2,roe:24.1,volume:892000,turnover:0.62}
+        ]
+      },
+      期货: {
+        r: [
+          {code:'IF2610',name:'沪深300',price:4126,change:0.84,volume:126420,open_interest:218540},
+          {code:'IC2610',name:'中证500',price:6285,change:-0.52,volume:98200,open_interest:156320},
+          {code:'TA610',name:'PTA',price:5214,change:-1.16,volume:98125,open_interest:342810}
+        ]
+      },
+      期权: {
+        r: [
+          {code:'510050C2609M03000',name:'50ETF购9月3000',price:0.1824,change:8.62,iv:22.4,oi:126420},
+          {code:'510300P2609M04400',name:'300ETF沽9月4400',price:0.0988,change:-3.18,iv:24.1,oi:98125},
+          {code:'IO2610-C-4200',name:'沪深300购4200',price:112.6,change:2.11,iv:21.7,oi:65802}
+        ]
+      }
+    };
+    rows = d2[market]?.r || [];
+    document.querySelector('#count').textContent = rows.length + ' 个标的（演示数据）';
+  }
+  // 渲染表格
+  const headerMap = {
+    'A股': ['代码','名称','最新价','涨跌幅','市值(亿)','PE','ROE(%)'],
+    '期货': ['合约','品种','最新价','涨跌幅','成交量','持仓量'],
+    '期权': ['合约','类型','最新价','涨跌幅','隐含波动率','持仓量']
+  };
+  const h = headerMap[market] || d.h;
+  document.querySelector('#output').innerHTML = (d.sortOptions ? `<div class="sort-bar"><span style="font-size:11px;color:#8792a5;margin-right:8px">排序</span>${d.sortOptions.map((s, i) => `<button class="sort-btn${activeSort?.dataset.sort===s?' active':''}" data-sort="${s}">${s}</button>`).join('')}</div>` : '') +
+    `<table class="result-table"><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map((r, idx) => {
+      const cells = market === 'A股'
+        ? [r.code, r.name, r.price?.toLocaleString(), (r.change>=0?'+':'')+r.change+'%', r.market_cap, r.pe, r.roe]
+        : market === '期货'
+        ? [r.code, r.name, r.price?.toLocaleString(), (r.change>=0?'+':'')+r.change+'%', r.volume, r.open_interest]
+        : [r.code, r.type||'--', r.price, (r.change>=0?'+':'')+r.change+'%', r.iv, r.oi];
+      return `<tr data-idx="${idx}" class="stock-row"><td>${cells[0]||''}</td><td>${cells[1]||''}</td><td>${cells[2]||''}</td><td class="${r.change>=0?'pos':'neg'}">${cells[3]||''}</td><td>${cells[4]||''}</td><td>${cells[5]||''}</td><td>${cells[6]||''}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  // 绑定行点击 + 排序按钮
   document.querySelectorAll('.stock-row').forEach(tr => {
     tr.addEventListener('click', () => openDetail(rows[parseInt(tr.dataset.idx)]));
   });
-  toast('筛选完成，找到 ' + rows.length + ' 个符合条件的标的');
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      run();
+    });
+  });
+  toast('筛选完成');
 }
 
 // ═══ 详情页 ═══

@@ -32,4 +32,16 @@
 .detail-btn.primary:hover{background:#2552cc}
 /* 表格行可点击 */
 .result-table tbody tr{cursor:pointer}
-.result-table tbody tr:hover{background:#f0f4ff}@media(max-width:720px){aside{width:65px;padding:20px 8px}aside h2{font-size:0}aside h2:first-letter{font-size:22px}aside>small,.upgrade,.profile{display:none}nav button{font-size:0;text-align:center;padding:13px 0}nav button:first-letter{font-size:17px}header{padding:0 16px}.view{padding:22px 15px}.orb{display:none}.cards{grid-template-columns:1fr}.row{grid-template-columns:1.5fr .8fr 1.5fr}.row span:nth-child(4),.row span:nth-child(5){display:none}.screen{grid-template-columns:1fr}.screen-head{display:block}}
+.result-table tbody tr:hover{background:#f0f4ff}
+/* 排序栏 */
+.sort-bar{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:8px 0 14px;border-bottom:1px solid #eef1f6;margin-bottom:16px}
+.sort-btn{padding:5px 12px;border:1px solid #e1e6ef;border-radius:20px;background:#fff;font:inherit;font-size:11px;color:#6b7689;cursor:pointer;transition:.2s}
+.sort-btn:hover{border-color:#3164e8;color:#3164e8}
+.sort-btn.active{background:#3164e8;color:#fff;border-color:#3164e8}
+/* 筛选条件行 */
+.field-row{display:flex;gap:6px}
+.field-row select{flex:0 0 72px;padding:9px 8px;border:1px solid #e1e6ef;border-radius:8px;font:inherit;font-size:12px;background:#fff;color:#172033;outline:none}
+.field-row select:focus{border-color:#3164e8}
+.field-row input{flex:1;padding:9px 10px;border:1px solid #e1e6ef;border-radius:8px;font:inherit;font-size:12px;outline:none;transition:border .2s}
+.field-row input:focus{border-color:#3164e8;box-shadow:0 0 0 3px rgba(49,100,232,.1)}
+@media(max-width:720px){aside{width:65px;padding:20px 8px}aside h2{font-size:0}aside h2:first-letter{font-size:22px}aside>small,.upgrade,.profile{display:none}nav button{font-size:0;text-align:center;padding:13px 0}nav button:first-letter{font-size:17px}header{padding:0 16px}.view{padding:22px 15px}.orb{display:none}.cards{grid-template-columns:1fr}.row{grid-template-columns:1.5fr .8fr 1.5fr}.row span:nth-child(4),.row span:nth-child(5){display:none}.screen{grid-template-columns:1fr}.screen-head{display:block}}

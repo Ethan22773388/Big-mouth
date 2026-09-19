@@ -70,6 +70,19 @@ class Handler(BaseHTTPRequestHandler):
             if parsed.path == "/api/login":
                 token, user = login(body.get("phone", ""), body.get("password", ""))
                 return self._send({"token": token, "user": user})
+            if parsed.path == "/api/screen":
+                market = body.get("market", "A股")
+                filters = body.get("filters", [])
+                sort_by = body.get("sort_by")
+                sort_order = body.get("sort_order", "desc")
+                limit = min(body.get("limit", 100), 500)
+                if market not in DEMO:
+                    return self._send({"error": "unsupported_market"}, 400)
+                provider = get_provider(DEMO)
+                items = provider.get_market(market)
+                from providers import apply_filters
+                filtered = apply_filters(items, filters, sort_by, sort_order, limit)
+                return self._send({"market": market, "total": len(items), "matched": len(filtered), "items": filtered})
             user = self._current_user()
             if not user: return self._send({"error": "unauthorized", "message": "请先登录"}, 401)
             if parsed.path == "/api/filters":
