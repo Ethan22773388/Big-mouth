@@ -162,6 +162,36 @@
   </div>
 </div>
 
+<!-- 标的详情页弹窗 -->
+<div id="detail-modal" class="modal-overlay hidden">
+  <div class="detail-modal">
+    <button class="modal-close" id="detail-close-btn"></button>
+    <!-- 头部：名称 + 价格 -->
+    <div class="detail-header">
+      <div>
+        <h2 id="detail-name" style="font-size:22px;font-weight:700;color:#0f172a;margin:0">--</h2>
+        <span id="detail-code" style="font-size:12px;color:#8792a5">--</span>
+      </div>
+      <div style="text-align:right">
+        <div id="detail-price" style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums">--</div>
+        <div id="detail-change" style="font-size:13px;font-weight:600">--</div>
+      </div>
+    </div>
+    <!-- K线图 -->
+    <div class="detail-chart">
+      <canvas id="kline-canvas" width="600" height="220"></canvas>
+    </div>
+    <!-- 关键指标 -->
+    <div class="detail-metrics" id="detail-metrics"></div>
+    <!-- 操作按钮 -->
+    <div class="detail-actions">
+      <button class="detail-btn" id="detail-watch-btn">⭐ 加入自选</button>
+      <button class="detail-btn" id="detail-export-btn">📤 导出数据</button>
+      <button class="detail-btn primary" id="detail-screen-btn">🔄 重新筛选</button>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 </body>
 </html>
