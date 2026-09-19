@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>量策筛选 — 多市场量化筛选工具</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="app">
+  <!-- 侧边栏 -->
+  <aside>
+    <h2>量策</h2>
+    <small>多市场量化筛选</small>
+    <nav>
+      <button class="active" data-view="home"> 工作台</button>
+      <button data-view="stock">📊 A 股</button>
+      <button data-view="future"> 期货</button>
+      <button data-view="option">🔗 期权</button>
+    </nav>
+    <div class="upgrade">
+      <small>免费版</small>
+      <b>升级到专业会员</b>
+      <p>解锁分钟数据、技术指标、期权 Greeks 和高级筛选模板</p>
+      <a data-action="upgrade">查看会员方案</a>
+    </div>
+    <div class="profile">
+      <span id="profile-info">未登录</span>
+    </div>
+  </aside>
+
+  <div class="shell">
+    <!-- 顶栏 -->
+    <header>
+      <span>📍 <b id="crumb">市场概览</b></span>
+      <button data-action="login">登录 / 注册</button>
+    </header>
+
+    <!-- 主页视图 -->
+    <main>
+      <section class="view" id="home">
+        <div class="hero">
+          <div>
+            <label>欢迎回来</label>
+            <h1>用数据发现<em>交易机会</em></h1>
+            <p>覆盖 A 股、期货和期权，按你设定的条件筛选标的。<br/>先选一个市场开始。</p>
+            <button class="primary" data-view="stock">开始筛选 →</button>
+          </div>
+          <div class="orb">
+            <label>数据已同步</label>
+            <strong>2026-09-19</strong>
+            <span>14:32 CST</span>
+          </div>
+        </div>
+
+        <h2>市场概览 <small>热门标的与板块动态</small></h2>
+        <div class="cards">
+          <article>
+            <b class="blue">A 股</b>
+            <strong>3,246.18</strong>
+            <i class="green">▲ 0.62%</i>
+            <small>沪深两市成交额 9,821 亿</small>
+          </article>
+          <article>
+            <b class="purple">期货</b>
+            <strong>4,126</strong>
+            <i class="green">▲ 0.84%</i>
+            <small>IF2610 主力合约</small>
+          </article>
+          <article>
+            <b class="orange">期权</b>
+            <strong>50ETF 购</strong>
+            <i class="red">▼ 3.18%</i>
+            <small>隐含波动率 24.1%</small>
+          </article>
+        </div>
+
+        <h2>热门板块 <small>今日资金流入前 5</small></h2>
+        <div class="table">
+          <div class="row head"><span>板块</span><span>涨跌幅</span><span>资金流入</span><span>领涨股</span><span>成交额</span></div>
+          <div class="row"><b>半导体</b><span class="green">+2.18%</span><span>12.4 亿</span><span>北方华创</span><span>842 亿</span></div>
+          <div class="row"><b>新能源车</b><span class="green">+1.56%</span><span>9.8 亿</span><span>比亚迪</span><span>624 亿</span></div>
+          <div class="row"><b>医药生物</b><span class="green">+1.21%</span><span>7.2 亿</span><span>恒瑞医药</span><span>486 亿</span></div>
+          <div class="row"><b>光伏</b><span class="red">-0.42%</span><span>-3.1 亿</span><span>隆基绿能</span><span>312 亿</span></div>
+          <div class="row"><b>银行</b><span class="red">-0.18%</span><span>-1.6 亿</span><span>招商银行</span><span>274 亿</span></div>
+        </div>
+      </section>
+
+      <!-- 筛选视图 -->
+      <section class="view hidden" id="screen">
+        <div class="screen-head">
+          <div>
+            <label>条件筛选</label>
+            <h1 id="screen-title">A 股筛选</h1>
+            <p>设置指标条件，点击运行筛选，找到符合你策略的标的。</p>
+          </div>
+          <div>
+            <button class="primary" data-action="run">运行筛选</button>
+            <button class="outline" data-action="reset" style="margin-left:8px">重置</button>
+          </div>
+        </div>
+        <div class="screen">
+          <div class="filters" id="filters-panel">
+            <div>
+              <b>筛选条件</b>
+              <a data-action="add">＋ 添加条件</a>
+            </div>
+            <div id="fields"></div>
+          </div>
+          <div class="results">
+            <b>筛选结果 <span id="count">等待运行</span></b>
+            <div id="output"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
